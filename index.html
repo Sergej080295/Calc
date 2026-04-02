@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Профессиональный калькулятор норм времени</title>
+  <style>
+    :root {
+      --bg:#0a1224;--bg2:#0f1b36;--card:#111d39;--card2:#16254a;--line:#2b3d67;
+      --txt:#eaf1ff;--mut:#a6b8de;--acc:#58b0ff;--ok:#32d49c;--warn:#ffca6b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;color:var(--txt);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:
+      radial-gradient(1200px 500px at 15% -10%, #21407a55, transparent),
+      radial-gradient(900px 500px at 90% 0, #1f8ccf33, transparent),
+      linear-gradient(180deg,var(--bg2),var(--bg));}
+    .wrap{max-width:1320px;margin:0 auto;padding:22px}
+    h1{margin:0;font-size:30px;letter-spacing:.2px}
+    .lead{margin:8px 0 18px;color:var(--mut)}
+    .layout{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .card{background:linear-gradient(180deg,var(--card),#0e1831);border:1px solid var(--line);border-radius:16px;padding:14px}
+    .hero{display:flex;justify-content:space-between;gap:16px;align-items:center}
+    .hero .right{display:flex;gap:10px;flex-wrap:wrap}
+    .chip{padding:8px 12px;border-radius:999px;background:#1b2c55;border:1px solid #365089;color:#cfe0ff;font-size:12px}
+    .controls{display:grid;grid-template-columns:repeat(3,minmax(140px,1fr));gap:10px;margin-top:12px}
+    label{display:grid;gap:6px;color:var(--mut);font-size:12px}
+    input,select{width:100%;padding:10px;border-radius:10px;background:#0b1530;border:1px solid #37518a;color:var(--txt)}
+    .switch{display:flex;align-items:center;gap:8px}
+    .switch input{width:44px;height:24px;appearance:none;background:#344e84;border-radius:999px;position:relative}
+    .switch input:after{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+    .switch input:checked{background:var(--ok)} .switch input:checked:after{transform:translateX(20px)}
+    .op{border:1px solid var(--line);border-radius:14px;margin-top:10px;overflow:hidden;background:#0f1b36}
+    .opHead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#132247}
+    .opTitle{display:flex;align-items:center;gap:10px}
+    .opIcon{width:34px;height:34px;border-radius:10px;background:#203769;display:grid;place-items:center}
+    .opBody{padding:12px;display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px}
+    .summaryGrid{display:grid;gap:10px}
+    .kpi{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}
+    .kpi .v{font-size:28px;font-weight:700}
+    .mut{color:var(--mut)}
+    .opSummary{display:grid;gap:8px}
+    .row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px;border-radius:10px;background:#122248;border:1px solid #2c4473}
+    details{margin-top:12px}
+    details summary{cursor:pointer;color:#cfe0ff;font-weight:600}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+    th,td{padding:8px;border-bottom:1px solid #2a3f6a;text-align:left}
+    @media(max-width:1080px){.layout{grid-template-columns:1fr}.opBody{grid-template-columns:1fr 1fr}.controls{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card hero">
+      <div>
+        <h1>Калькулятор норм времени слесарно-мех. операций</h1>
+        <div class="lead">Профессиональная версия: отдельные сводки по каждой операции + общая сводка. Формулы построены по технологическому стандарту времени резания и наладки.</div>
+      </div>
+      <div class="right">
+        <span class="chip">Стандартный подход: RPM/Feed/Stroke</span>
+        <span class="chip">Плавные формулы без ступенек</span>
+        <span class="chip">Настройка под ваш цех через коэффициенты</span>
+      </div>
+    </section>
+
+    <div class="layout">
+      <section class="card">
+        <div class="controls">
+          <label>Материал
+            <select id="material"><option value="al">Алюминий</option><option value="steel">Сталь</option><option value="ss">Нерж.</option></select>
+          </label>
+          <label>Партия, шт
+            <input id="batch" type="number" min="1" value="200">
+          </label>
+          <label class="switch">Сохранять данные
+            <input id="persist" type="checkbox" checked>
+          </label>
+        </div>
+
+        <div class="op" data-op="drill">
+          <div class="opHead"><div class="opTitle"><div class="opIcon">🕳️</div><strong>Сверловка (резьбонарезной)</strong></div><label class="switch">Вкл <input id="en_drill" type="checkbox" checked></label></div>
+          <div class="opBody">
+            <label>Отверстий/деталь<input id="drill_holes" type="number" min="0" value="4"></label>
+            <label>D сверла, мм<input id="drill_d" type="number" min="0.5" step="0.1" value="3.4"></label>
+            <label>Глубина, мм<input id="drill_t" type="number" min="0.5" step="0.1" value="5"></label>
+          </div>
+        </div>
+
+        <div class="op" data-op="tap">
+          <div class="opHead"><div class="opTitle"><div class="opIcon">🔩</div><strong>Резьба (резьбонарезной)</strong></div><label class="switch">Вкл <input id="en_tap" type="checkbox" checked></label></div>
+          <div class="opBody">
+            <label>Отверстий/деталь<input id="tap_holes" type="number" min="0" value="4"></label>
+            <label>Размер резьбы<select id="tap_size"><option value="0.5">M3x0.5</option><option value="0.7">M4x0.7</option><option value="0.8">M5x0.8</option><option value="1" selected>M6x1.0</option><option value="1.25">M8x1.25</option><option value="1.5">M10x1.5</option></select></label>
+            <label>Глубина, мм<input id="tap_depth" type="number" min="1" step="0.5" value="8"></label>
+          </div>
+        </div>
+
+        <div class="op" data-op="cs">
+          <div class="opHead"><div class="opTitle"><div class="opIcon">📐</div><strong>Зенковка</strong></div><label class="switch">Вкл <input id="en_cs" type="checkbox" checked></label></div>
+          <div class="opBody">
+            <label>Отверстий/деталь<input id="cs_holes" type="number" min="0" value="2"></label>
+            <label>Вход, мм<input id="cs_in" type="number" min="1" step="0.1" value="3.4"></label>
+            <label>Выход, мм<input id="cs_out" type="number" min="2" step="0.1" value="5.4"></label>
+            <label>Угол<select id="cs_angle"><option>90</option><option selected>120</option></select></label>
+          </div>
+        </div>
+
+        <div class="op" data-op="deb">
+          <div class="opHead"><div class="opTitle"><div class="opIcon">✨</div><strong>Зачистка после лазера</strong></div><label class="switch">Вкл <input id="en_deb" type="checkbox" checked></label></div>
+          <div class="opBody">
+            <label>Способ<select id="deburr_method"><option value="orbital">Эксцентрик</option><option value="grinder">Плоскошлиф</option></select></label>
+            <label>Периметр, мм<input id="deburr_perim" type="number" min="10" step="10" value="300"></label>
+            <label>Площадь, см²<input id="deburr_area" type="number" min="1" step="1" value="30"></label>
+          </div>
+        </div>
+
+        <div class="op" data-op="vib">
+          <div class="opHead"><div class="opTitle"><div class="opIcon">🌀</div><strong>Галтовка (вибро)</strong></div><label class="switch">Вкл <input id="en_vib" type="checkbox" checked></label></div>
+          <div class="opBody">
+            <label>Объем детали, см³<input id="vib_vol" type="number" min="0.1" step="0.1" value="8"></label>
+            <label>Макс. габарит, мм<input id="vib_dim" type="number" min="5" value="70"></label>
+            <label>Объем чаши, л<input id="vib_machine" type="number" min="5" value="80"></label>
+          </div>
+        </div>
+
+        <div class="op" data-op="saw">
+          <div class="opHead"><div class="opTitle"><div class="opIcon">🪚</div><strong>ЧПУ лентопил</strong></div><label class="switch">Вкл <input id="en_saw" type="checkbox" checked></label></div>
+          <div class="opBody">
+            <label>Тип проката<select id="saw_type"><option value="plate">Плита/полоса</option><option value="round">Круг</option><option value="square">Квадрат</option><option value="tube_round">Труба круглая</option><option value="tube_rect">Труба профиль</option><option value="angle">Уголок</option><option value="channel">Швеллер</option></select></label>
+            <label>Размер A, мм<input id="saw_a" type="number" min="1" value="70"></label>
+            <label>Размер B/стенка, мм<input id="saw_b" type="number" min="1" value="35"></label>
+            <label>Резов/деталь<input id="saw_cuts" type="number" min="0" value="1"></label>
+          </div>
+        </div>
+
+        <details>
+          <summary>Паспорт норм (подстройка под ваше производство)</summary>
+          <div class="opBody" style="padding-top:10px">
+            <label>Коэф. скорости резания (0.7-1.3)<input id="k_speed" type="number" step="0.05" value="1.00"></label>
+            <label>Коэф. ручных операций (0.7-1.5)<input id="k_manual" type="number" step="0.05" value="1.00"></label>
+            <label>Наладка сверловки, мин<input id="setup_drill" type="number" step="0.5" value="8"></label>
+            <label>Наладка резьбы, мин<input id="setup_tap" type="number" step="0.5" value="10"></label>
+            <label>Наладка зенковки, мин<input id="setup_cs" type="number" step="0.5" value="9"></label>
+            <label>Наладка лентопила, мин<input id="setup_saw" type="number" step="0.5" value="6"></label>
+          </div>
+        </details>
+      </section>
+
+      <section class="card summaryGrid">
+        <div class="kpi">
+          <div class="mut">Общая сводка (включенные операции)</div>
+          <div class="v" id="totalPer">0.00 мин/деталь</div>
+          <div class="v" style="font-size:24px" id="totalBatch">0.0 мин/партия</div>
+          <div class="mut" id="totalHours">0.00 ч</div>
+        </div>
+
+        <div class="kpi">
+          <div style="font-weight:700;margin-bottom:8px">Сводки по операциям</div>
+          <div id="opSummary" class="opSummary"></div>
+        </div>
+
+        <div class="kpi">
+          <div class="mut">Проверка корректности</div>
+          <ul class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.35">
+            <li>Каждая функция операции независима и возвращает унифицированный объект.</li>
+            <li>Агрегация производится централизованно в <code>recalc()</code>.</li>
+            <li>Отключение операции не влияет на формулы других операций.</li>
+          </ul>
+        </div>
+
+        <div class="kpi">
+          <div style="font-weight:700">Детализация</div>
+          <table id="tbl"><thead><tr><th>Операция</th><th>мин/дет</th><th>мин/партия</th><th>Статус</th></tr></thead><tbody></tbody></table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+const ids = ['material','batch','persist','en_drill','drill_holes','drill_d','drill_t','en_tap','tap_holes','tap_size','tap_depth','en_cs','cs_holes','cs_in','cs_out','cs_angle','en_deb','deburr_method','deburr_perim','deburr_area','en_vib','vib_vol','vib_dim','vib_machine','en_saw','saw_type','saw_a','saw_b','saw_cuts','k_speed','k_manual','setup_drill','setup_tap','setup_cs','setup_saw'];
+const key='calc_prof_v3';
+const defaults = {};
+ids.forEach(id=>defaults[id]=($(id).type==='checkbox'?$(id).checked:$(id).value));
+
+function load(){const s=JSON.parse(localStorage.getItem(key)||'null');if(!s)return;ids.forEach(id=>{if(s[id]===undefined)return;($(id).type==='checkbox')?$(id).checked=!!s[id]:$(id).value=s[id];});}
+function save(){if(!$('persist').checked){localStorage.removeItem(key);return;}const s={};ids.forEach(id=>s[id]=($(id).type==='checkbox'?$(id).checked:$(id).value));localStorage.setItem(key,JSON.stringify(s));}
+function num(id){return +($(id).value||0);} function on(id){return $(id).checked;}
+function mat(m){return {al:{vcD:75,fD:0.09,vcT:20,cs:13,deb:1,saw:1,vib:28},steel:{vcD:30,fD:0.06,vcT:12,cs:15,deb:1.2,saw:0.62,vib:38},ss:{vcD:15,fD:0.045,vcT:7,cs:18,deb:1.45,saw:0.45,vib:52}}[m];}
+
+function drill(m,b){const p=mat(m),ks=num('k_speed'),km=num('k_manual');const h=num('drill_holes'),D=num('drill_d'),t=num('drill_t');const n=1000*p.vcD*ks/(Math.PI*Math.max(D,.5));const vf=p.fD*n;const L=t+.3*D+2;const hole=L/Math.max(vf,1)+4*km/60;const piece=h*hole+10*km/60;const setup=num('setup_drill');return {name:'Сверловка',enabled:on('en_drill'),per:piece+setup/b,batch:setup+piece*b};}
+function tap(m,b){const p=mat(m),ks=num('k_speed'),km=num('k_manual');const h=num('tap_holes'),pitch=+$('tap_size').value,depth=num('tap_depth');const d=Math.max(3,Math.min(12,pitch*6));const n=1000*p.vcT*ks/(Math.PI*d);const vf=n*pitch;const hole=((depth+2)/Math.max(vf,.1))*2*1.08+5*km/60;const piece=h*hole+12*km/60;const setup=num('setup_tap');return {name:'Резьба',enabled:on('en_tap'),per:piece+setup/b,batch:setup+piece*b};}
+function cs(m,b){const p=mat(m),ks=num('k_speed'),km=num('k_manual');const h=num('cs_holes'),din=num('cs_in'),dout=num('cs_out'),ang=num('cs_angle')*Math.PI/180;const depth=Math.max(.2,(dout-din)/(2*Math.tan(ang/2)));const vc=(m==='ss'?8:m==='steel'?12:18)*ks;const n=1000*vc/(Math.PI*Math.max(2,dout));const vf=(m==='ss'?0.03:0.05)*n;const mach=(depth+.8)/Math.max(vf,.2);const hand=(p.cs/60)*(1+Math.max(0,h-4)*0.018)*(1+Math.max(0,dout-5.4)*0.09)*(ang>2?1.12:1)*km;const piece=h*(mach+hand)+8*km/60;const setup=num('setup_cs');return {name:'Зенковка',enabled:on('en_cs'),per:piece+setup/b,batch:setup+piece*b};}
+function deb(m,b){const p=mat(m),km=num('k_manual');const method=$('deburr_method').value,per=num('deburr_perim'),area=num('deburr_area');let piece=method==='orbital'?(0.18+(per/1000)*0.85+0.03*Math.sqrt(area)):(0.28+(area/100)*2+0.02*Math.sqrt(per));piece*=p.deb*km;const setup=method==='orbital'?2:12;return {name:'Зачистка',enabled:on('en_deb'),per:piece+setup/b,batch:setup+piece*b};}
+function vib(m,b){const p=mat(m),km=num('k_manual');const vol=num('vib_vol'),dim=num('vib_dim'),ml=num('vib_machine');const need=b*(vol/1000)*4;const load=Math.max(.55,need/Math.max(ml,5));const cycle=(p.vib*(1+(dim-50)/500)+12)*km;const total=cycle*load;return {name:'Галтовка',enabled:on('en_vib'),per:total/b,batch:total};}
+function area(type,a,b){switch(type){case 'plate':return a*b;case 'round':return Math.PI*(a/2)**2;case 'square':return a*a;case 'tube_round':{const t=Math.min(b,a/2-.1);return Math.PI*((a/2)**2-((a/2)-t)**2)}case 'tube_rect':{const w=a,h=Math.max(a*.6,10),t=Math.min(b,Math.min(w,h)/2-.1);return w*h-(w-2*t)*(h-2*t)}case 'angle':{const leg=a,t=b;return 2*leg*t-t*t}case 'channel':{const h=a,w=Math.max(a*.5,10),t=b;return h*t*2+(w-2*t)*t}default:return a*b;}}
+function saw(m,b){const ks=num('k_speed');const t=$('saw_type').value,a=num('saw_a'),bb=num('saw_b'),cuts=num('saw_cuts');const cm2=area(t,a,bb)/100;const rate=36.75*mat(m).saw*ks;const cut=cm2/Math.max(rate,1)+0.10;const piece=cuts*cut+0.06;const setup=num('setup_saw');return {name:'Лентопил',enabled:on('en_saw'),per:piece+setup/b,batch:setup+piece*b};}
+
+function recalc(){
+  const m=$('material').value,b=Math.max(1,num('batch'));
+  const ops=[drill(m,b),tap(m,b),cs(m,b),deb(m,b),vib(m,b),saw(m,b)];
+  const active=ops.filter(o=>o.enabled);
+  const totalPer=active.reduce((s,o)=>s+o.per,0), totalBatch=active.reduce((s,o)=>s+o.batch,0);
+  $('totalPer').textContent=`${totalPer.toFixed(2)} мин/деталь`;
+  $('totalBatch').textContent=`${totalBatch.toFixed(1)} мин/партия`;
+  $('totalHours').textContent=`${(totalBatch/60).toFixed(2)} ч`;
+
+  const os=$('opSummary'); os.innerHTML='';
+  ops.forEach(o=>{const d=document.createElement('div');d.className='row';d.innerHTML=`<div><strong>${o.name}</strong><div class="mut">${o.enabled?'Включено':'Отключено'}</div></div><div style="text-align:right"><div>${o.per.toFixed(2)} мин/дет</div><div class="mut">${o.batch.toFixed(1)} мин/парт</div></div>`;os.appendChild(d);});
+
+  const tb=$('tbl').querySelector('tbody');tb.innerHTML='';
+  ops.forEach(o=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${o.name}</td><td>${o.per.toFixed(2)}</td><td>${o.batch.toFixed(1)}</td><td>${o.enabled?'🟢':'⚫'}</td>`;tb.appendChild(tr);});
+  save();
+}
+
+function resetDefaults(){if($('persist').checked)return;localStorage.removeItem(key);ids.forEach(id=>($(id).type==='checkbox')?$(id).checked=!!defaults[id]:$(id).value=defaults[id]);}
+load(); ids.forEach(id=>$(id).addEventListener('input',recalc)); $('persist').addEventListener('change',()=>{if(!$('persist').checked)resetDefaults();recalc();}); window.addEventListener('beforeunload',()=>{if(!$('persist').checked)localStorage.removeItem(key)}); recalc();
+</script>
+</body>
+</html>
