@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Калькулятор времязатрат слесарных и заготовительных операций</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --bg2:#0f172a;
+      --panel:#111c31;
+      --panel2:#17253f;
+      --line:#243553;
+      --text:#e6edf7;
+      --muted:#9fb0ca;
+      --accent:#6aa7ff;
+      --accent2:#87f0c8;
+      --warn:#ffcc66;
+      --danger:#ff7b7b;
+      --ok:#86efac;
+      --shadow:0 16px 40px rgba(0,0,0,.28);
+      --radius:20px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#09111d 0%,#0b1220 100%);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+    body{padding:24px}
+    .app{max-width:1480px;margin:0 auto}
+    .hero{
+      display:grid;
+      grid-template-columns:1.4fr .9fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+    .heroCard,.metaCard,.panel{
+      background:linear-gradient(180deg,rgba(23,37,63,.96),rgba(16,26,45,.96));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .heroCard{padding:26px 28px}
+    .metaCard{padding:22px}
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(106,167,255,.12);
+      border:1px solid rgba(106,167,255,.25);
+      color:#bfd6ff;
+      font-size:12px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      margin-bottom:14px;
+    }
+    h1{
+      margin:0 0 10px 0;
+      font-size:34px;
+      line-height:1.1;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+    .lead{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.6;
+      max-width:90%;
+    }
+    .heroStats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-top:20px;
+    }
+    .stat{
+      padding:14px 16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .stat b{
+      display:block;
+      font-size:18px;
+      margin-bottom:4px;
+      color:#fff;
+    }
+    .stat span{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    .topSettings{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:12px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      min-width:0;
+    }
+    .field label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:600;
+      letter-spacing:.02em;
+    }
+    .field input,.field select,.field textarea{
+      width:100%;
+      min-width:0;
+      background:rgba(8,14,24,.7);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:14px;
+      outline:none;
+      transition:.18s ease;
+    }
+    .field input:focus,.field select:focus,.field textarea:focus{
+      border-color:rgba(106,167,255,.55);
+      box-shadow:0 0 0 3px rgba(106,167,255,.12);
+    }
+    .hint{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.45;
+    }
+
+    .tabs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:18px 0;
+    }
+    .tabBtn{
+      appearance:none;
+      border:1px solid var(--line);
+      background:rgba(17,28,49,.75);
+      color:#c8d6ea;
+      border-radius:14px;
+      padding:12px 16px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    .tabBtn:hover{transform:translateY(-1px);border-color:#3d5f95}
+    .tabBtn.active{
+      background:linear-gradient(180deg,rgba(106,167,255,.22),rgba(106,167,255,.12));
+      color:#fff;
+      border-color:rgba(106,167,255,.55);
+    }
+
+    .tabPane{display:none}
+    .tabPane.active{display:block}
+
+    .grid{
+      display:grid;
+      grid-template-columns:minmax(640px,1.2fr) minmax(360px,.8fr);
+      gap:18px;
+    }
+    .panel{padding:20px}
+    .panel h2{
+      margin:0 0 16px 0;
+      font-size:22px;
+      letter-spacing:-.02em;
+    }
+    .panel h3{
+      margin:18px 0 12px 0;
+      font-size:15px;
+      color:#dfe9f8;
+    }
+    .subgrid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+    }
+    .subgrid.two{grid-template-columns:repeat(2,1fr)}
+    .subgrid.four{grid-template-columns:repeat(4,1fr)}
+
+    .resultStack{
+      display:grid;
+      gap:12px;
+    }
+    .resultCard{
+      padding:16px;
+      border-radius:16px;
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.025));
+      border:1px solid rgba(255,255,255,.07);
+    }
+    .resultCard .k{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:6px;
+    }
+    .resultCard .v{
+      display:block;
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      color:#fff;
+    }
+    .resultCard small{
+      display:block;
+      color:var(--muted);
+      margin-top:6px;
+      line-height:1.45;
+      font-size:12px;
+    }
+
+    .formula{
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:14px;
+      background:rgba(7,12,20,.55);
+      border:1px solid rgba(255,255,255,.06);
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-size:12px;
+      color:#c9daf5;
+      line-height:1.6;
+      white-space:pre-wrap;
+    }
+
+    .badgeRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+    .badge{
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(135,240,200,.1);
+      border:1px solid rgba(135,240,200,.22);
+      color:#d7fff1;
+      font-size:12px;
+      font-weight:700;
+    }
+    .badge.warn{
+      background:rgba(255,204,102,.08);
+      border-color:rgba(255,204,102,.18);
+      color:#ffe4a7;
+    }
+
+    .footerNote{
+      margin-top:18px;
+      padding:16px 18px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      color:var(--muted);
+      line-height:1.6;
+      font-size:13px;
+    }
+
+    .mutedBox{
+      padding:14px 16px;
+      border-radius:14px;
+      background:rgba(255,255,255,.025);
+      border:1px dashed rgba(255,255,255,.10);
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-top:12px;
+    }
+
+    @media (max-width:1180px){
+      .hero{grid-template-columns:1fr}
+      .topSettings{grid-template-columns:repeat(2,1fr)}
+      .grid{grid-template-columns:1fr}
+    }
+    @media (max-width:760px){
+      body{padding:14px}
+      .topSettings,.subgrid,.subgrid.two,.subgrid.four{grid-template-columns:1fr}
+      h1{font-size:28px}
+      .lead{max-width:100%}
+      .heroStats{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="heroCard">
+        <div class="eyebrow">Технологический расчёт • версия 1.3</div>
+        <h1>Калькулятор времязатрат слесарных и заготовительных работ</h1>
+        <p class="lead">
+          Расчёт ориентировочного штучного и партийного времени по операциям:
+          сверловка, резьба, зенковка, зачистка после лазера, ЧПУ-лентопил по разному прокату
+          и предварительная оценка галтовки.
+        </p>
+
+        <div class="heroStats">
+          <div class="stat">
+            <b>Режим А</b>
+            <span>Нормативный: ближе к чистому машинному времени и базовым допущениям.</span>
+          </div>
+          <div class="stat">
+            <b>Режим Б</b>
+            <span>Цеховой: учитывает производственную шероховатость процесса через коэффициент.</span>
+          </div>
+          <div class="stat">
+            <b>Калибровка</b>
+            <span>Эмпирические операции можно поджать без переписывания логики.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metaCard">
+        <div class="topSettings">
+          <div class="field">
+            <label for="calcMode">Выбор режима расчёта (цех. и нормат.)</label>
+            <select id="calcMode">
+              <option value="shop" selected>Б — цеховой</option>
+              <option value="norm">А — нормативный</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="batchQty">Количество деталей в партии</label>
+            <input id="batchQty" type="number" min="1" step="1" value="50" />
+          </div>
+
+          <div class="field">
+            <label for="setupPerBatch">Подгот.-заключ. время, мин/партия</label>
+            <input id="setupPerBatch" type="number" min="0" step="0.1" value="10" />
+          </div>
+
+          <div class="field">
+            <label for="auxPerPiece">Вспомогательное время, мин/деталь</label>
+            <input id="auxPerPiece" type="number" min="0" step="0.01" value="0.12" />
+          </div>
+
+          <div class="field">
+            <label for="shopFactor">Цеховой коэф. машинного времени</label>
+            <input id="shopFactor" type="number" min="1" step="0.01" value="1.5" />
+          </div>
+        </div>
+
+        <div class="badgeRow">
+          <span class="badge">Сверловка</span>
+          <span class="badge">Резьба</span>
+          <span class="badge">Зенковка</span>
+          <span class="badge">Зачистка</span>
+          <span class="badge">Лентопил ЧПУ</span>
+          <span class="badge warn">Галтовка — предварительная модель</span>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      <button class="tabBtn active" data-tab="drill">Сверловка</button>
+      <button class="tabBtn" data-tab="tap">Резьба</button>
+      <button class="tabBtn" data-tab="csink">Зенковка</button>
+      <button class="tabBtn" data-tab="deburr">Зачистка</button>
+      <button class="tabBtn" data-tab="bandsaw">ЧПУ лентопил</button>
+      <button class="tabBtn" data-tab="vibro">Галтовка</button>
+    </nav>
+
+    <!-- СВЕРЛОВКА -->
+    <section class="tabPane active" id="tab-drill">
+      <div class="grid">
+        <div class="panel">
+          <h2>Сверловка</h2>
+          <div class="subgrid">
+            <div class="field">
+              <label for="drillMaterial">Материал</label>
+              <select id="drillMaterial">
+                <option value="steel" selected>Сталь</option>
+                <option value="stainless">Нержавеющая сталь</option>
+                <option value="aluminum">Алюминий</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="drillTool">Инструмент</label>
+              <select id="drillTool">
+                <option value="hss" selected>HSS / HSCO</option>
+                <option value="carbide">Твердосплав</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="drillCoolant">СОЖ</label>
+              <select id="drillCoolant">
+                <option value="yes" selected>Да</option>
+                <option value="no">Нет</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="drillDia">Диаметр сверла, мм</label>
+              <input id="drillDia" type="number" min="0.1" step="0.1" value="8" />
+            </div>
+            <div class="field">
+              <label for="drillDepth">Глубина / толщина, мм</label>
+              <input id="drillDepth" type="number" min="0.1" step="0.1" value="6" />
+            </div>
+            <div class="field">
+              <label for="drillHoles">Отверстий на деталь</label>
+              <input id="drillHoles" type="number" min="1" step="1" value="8" />
+            </div>
+
+            <div class="field">
+              <label for="drillHoleType">Тип отверстия</label>
+              <select id="drillHoleType">
+                <option value="through" selected>Сквозное</option>
+                <option value="blind">Глухое</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="drillPointAngle">Угол при вершине сверла, °</label>
+              <input id="drillPointAngle" type="number" min="60" step="1" value="118" />
+            </div>
+            <div class="field">
+              <label for="drillPeck">Пошаговое сверление</label>
+              <select id="drillPeck">
+                <option value="auto" selected>Авто</option>
+                <option value="no">Нет</option>
+                <option value="yes">Да</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="drillPeckStep">Шаг peck, мм</label>
+              <input id="drillPeckStep" type="number" min="0.1" step="0.1" value="8" />
+            </div>
+            <div class="field">
+              <label for="drillHoleOverheadSec">Вспомогательное время, сек/отверстие</label>
+              <input id="drillHoleOverheadSec" type="number" min="0" step="0.1" value="2.5" />
+            </div>
+            <div class="field">
+              <label for="drillBreakthroughFactor">Припуск для глухого, ×D</label>
+              <input id="drillBreakthroughFactor" type="number" min="0" step="0.01" value="0.20" />
+            </div>
+          </div>
+
+          <div class="mutedBox">
+            В первой версии скорость резания и подача на оборот берутся автоматически по стартовым
+            пресетам. Логику позже можно расширить до ручного режима с прямым вводом vc и fn.
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Результат</h2>
+          <div class="resultStack">
+            <div class="resultCard">
+              <span class="k">Машинное время, мин/деталь</span>
+              <span class="v" id="drillMachineOut">—</span>
+              <small id="drillPresetOut">—</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Полное время, мин/деталь</span>
+              <span class="v" id="drillPieceOut">—</span>
+              <small>С учётом доли ПЗВ и общего вспомогательного времени.</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Время на партию, мин</span>
+              <span class="v" id="drillBatchOut">—</span>
+              <small id="drillBatchHint">—</small>
+            </div>
+          </div>
+
+          <div class="formula" id="drillFormulaOut"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- РЕЗЬБА -->
+    <section class="tabPane" id="tab-tap">
+      <div class="grid">
+        <div class="panel">
+          <h2>Резьба метчиком</h2>
+          <div class="subgrid">
+            <div class="field">
+              <label for="tapMaterial">Материал</label>
+              <select id="tapMaterial">
+                <option value="steel" selected>Сталь</option>
+                <option value="stainless">Нержавеющая сталь</option>
+                <option value="aluminum">Алюминий</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tapTool">Инструмент</label>
+              <select id="tapTool">
+                <option value="hsse" selected>HSS-E / HSCO</option>
+                <option value="carbide">Твердосплав</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tapType">Тип метчика</label>
+              <select id="tapType">
+                <option value="cut" selected>Режущий</option>
+                <option value="form">Раскатной</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="tapMajor">Номинальный диаметр резьбы, мм</label>
+              <input id="tapMajor" type="number" min="1" step="0.1" value="8" />
+            </div>
+            <div class="field">
+              <label for="tapPitch">Шаг резьбы, мм</label>
+              <input id="tapPitch" type="number" min="0.1" step="0.05" value="1.25" />
+            </div>
+            <div class="field">
+              <label for="tapLength">Длина резьбы, мм</label>
+              <input id="tapLength" type="number" min="0.1" step="0.1" value="12" />
+            </div>
+
+            <div class="field">
+              <label for="tapHoleType">Отверстие</label>
+              <select id="tapHoleType">
+                <option value="through" selected>Сквозное</option>
+                <option value="blind">Глухое</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tapThreadsPerPiece">Резьб на деталь</label>
+              <input id="tapThreadsPerPiece" type="number" min="1" step="1" value="6" />
+            </div>
+            <div class="field">
+              <label for="tapThreadPercent">Процент профиля, %</label>
+              <input id="tapThreadPercent" type="number" min="50" max="100" step="1" value="70" />
+            </div>
+
+            <div class="field">
+              <label for="tapReverseFactor">Коэффициент реверса</label>
+              <input id="tapReverseFactor" type="number" min="1" step="0.01" value="2.00" />
+            </div>
+            <div class="field">
+              <label for="tapHoleOverheadSec">Вспомогательное время, сек/резьбу</label>
+              <input id="tapHoleOverheadSec" type="number" min="0" step="0.1" value="3.5" />
+            </div>
+            <div class="field">
+              <label for="tapApproachPitch">Подход/выход, шагов резьбы</label>
+              <input id="tapApproachPitch" type="number" min="0" step="0.1" value="2" />
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Результат</h2>
+          <div class="resultStack">
+            <div class="resultCard">
+              <span class="k">Машинное время, мин/деталь</span>
+              <span class="v" id="tapMachineOut">—</span>
+              <small id="tapPresetOut">—</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Рекомендуемое сверло под резьбу, мм</span>
+              <span class="v" id="tapDrillOut">—</span>
+              <small>Для режущего и раскатного метчика расчёт разный.</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Полное время, мин/деталь</span>
+              <span class="v" id="tapPieceOut">—</span>
+              <small id="tapBatchHint">—</small>
+            </div>
+          </div>
+
+          <div class="formula" id="tapFormulaOut"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЗЕНКОВКА -->
+    <section class="tabPane" id="tab-csink">
+      <div class="grid">
+        <div class="panel">
+          <h2>Зенковка</h2>
+          <div class="subgrid">
+            <div class="field">
+              <label for="csMaterial">Материал</label>
+              <select id="csMaterial">
+                <option value="steel" selected>Сталь</option>
+                <option value="stainless">Нержавеющая сталь</option>
+                <option value="aluminum">Алюминий</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="csAngle">Угол зенковки, °</label>
+              <select id="csAngle">
+                <option value="90" selected>90°</option>
+                <option value="82">82°</option>
+                <option value="60">60°</option>
+                <option value="120">120°</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="csHoles">Зенковок на деталь</label>
+              <input id="csHoles" type="number" min="1" step="1" value="8" />
+            </div>
+
+            <div class="field">
+              <label for="csPilotDia">Исходный диаметр отверстия, мм</label>
+              <input id="csPilotDia" type="number" min="0.1" step="0.1" value="6.5" />
+            </div>
+            <div class="field">
+              <label for="csFinalDia">Финишный диаметр зенковки, мм</label>
+              <input id="csFinalDia" type="number" min="0.1" step="0.1" value="12" />
+            </div>
+            <div class="field">
+              <label for="csHoleOverheadSec">Вспомогательное время, сек/зенковку</label>
+              <input id="csHoleOverheadSec" type="number" min="0" step="0.1" value="2.0" />
+            </div>
+
+            <div class="field">
+              <label for="csExtraTravel">Доп. ход, мм</label>
+              <input id="csExtraTravel" type="number" min="0" step="0.1" value="0.5" />
+            </div>
+            <div class="field">
+              <label for="csPresetScale">Коэффициент к рекомендованным режимам</label>
+              <input id="csPresetScale" type="number" min="0.1" step="0.01" value="1.00" />
+            </div>
+            <div class="field">
+              <label for="csToolFamily">Семейство инструмента</label>
+              <select id="csToolFamily">
+                <option value="spiral" selected>Спиральная зенковка</option>
+                <option value="generic">Условно-универсальная</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mutedBox">
+            В режиме Б зенковка теперь считается по гибридной модели: теоретическая геометрия и режимы
+            сохраняются, но итог времени по возможности берётся из цеховой калибровки по фактическим сериям.
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Результат</h2>
+          <div class="resultStack">
+            <div class="resultCard">
+              <span class="k">Машинное время, мин/деталь</span>
+              <span class="v" id="csMachineOut">—</span>
+              <small id="csPresetOut">—</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Осевой ход на 1 зенковку, мм</span>
+              <span class="v" id="csDepthOut">—</span>
+              <small>Считает по геометрии зенковки и исходному отверстию.</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Полное время, мин/деталь</span>
+              <span class="v" id="csPieceOut">—</span>
+              <small id="csBatchHint">—</small>
+            </div>
+          </div>
+
+          <div class="formula" id="csFormulaOut"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЗАЧИСТКА -->
+    <section class="tabPane" id="tab-deburr">
+      <div class="grid">
+        <div class="panel">
+          <h2>Зачистка после лазерной резки</h2>
+          <div class="subgrid">
+            <div class="field">
+              <label for="debMethod">Способ</label>
+              <select id="debMethod">
+                <option value="orbital" selected>Вручную эксцентриком</option>
+                <option value="surface">Плоскошлифовальный станок</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="debMaterial">Материал</label>
+              <select id="debMaterial">
+                <option value="steel" selected>Сталь</option>
+                <option value="stainless">Нержавеющая сталь</option>
+                <option value="aluminum">Алюминий</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="debThickness">Толщина детали, мм</label>
+              <input id="debThickness" type="number" min="0.1" step="0.1" value="3" />
+            </div>
+
+            <div class="field">
+              <label for="debEdgeLen">Суммарная длина кромок, м/деталь</label>
+              <input id="debEdgeLen" type="number" min="0.01" step="0.01" value="1.8" />
+            </div>
+            <div class="field">
+              <label for="debAreaDm2">Площадь обработки, дм²/деталь</label>
+              <input id="debAreaDm2" type="number" min="0.01" step="0.01" value="3.2" />
+            </div>
+            <div class="field">
+              <label for="debSeverity">Тяжесть заусенца / окалины</label>
+              <select id="debSeverity">
+                <option value="light">Лёгкая</option>
+                <option value="medium" selected>Средняя</option>
+                <option value="heavy">Тяжёлая</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="debFaces">Сторон обработки</label>
+              <select id="debFaces">
+                <option value="1" selected>1 сторона</option>
+                <option value="2">2 стороны</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="debAccess">Доступность</label>
+              <select id="debAccess">
+                <option value="easy" selected>Простая геометрия</option>
+                <option value="medium">Средняя</option>
+                <option value="hard">Сложная</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="debHandlingSec">Перехват/установка, сек/деталь</label>
+              <input id="debHandlingSec" type="number" min="0" step="0.1" value="8" />
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Результат</h2>
+          <div class="resultStack">
+            <div class="resultCard">
+              <span class="k">Машинно-ручное время, мин/деталь</span>
+              <span class="v" id="debMachineOut">—</span>
+              <small id="debPresetOut">—</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Полное время, мин/деталь</span>
+              <span class="v" id="debPieceOut">—</span>
+              <small id="debBatchHint">—</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Время на партию, мин</span>
+              <span class="v" id="debBatchOut">—</span>
+              <small>Эта операция считается по калибруемой эмпирике.</small>
+            </div>
+          </div>
+
+          <div class="formula" id="debFormulaOut"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЛЕНТОПИЛ -->
+    <section class="tabPane" id="tab-bandsaw">
+      <div class="grid">
+        <div class="panel">
+          <h2>ЧПУ лентопил</h2>
+          <div class="subgrid">
+            <div class="field">
+              <label for="bsMaterial">Материал</label>
+              <select id="bsMaterial">
+                <option value="steel" selected>Сталь</option>
+                <option value="stainless">Нержавеющая сталь</option>
+                <option value="aluminum">Алюминий</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="bsShape">Тип проката</label>
+              <select id="bsShape">
+                <option value="plate" selected>Лист / плита / прямоугольник</option>
+                <option value="round">Круг</option>
+                <option value="roundTube">Труба круглая</option>
+                <option value="rectTube">Профильная труба прямоугольная</option>
+                <option value="squareBar">Квадрат</option>
+                <option value="rectBar">Полоса / прямоугольный прокат</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="bsCuts">Количество резов</label>
+              <input id="bsCuts" type="number" min="1" step="1" value="20" />
+            </div>
+
+            <div class="field">
+              <label for="bsA">Размер A, мм</label>
+              <input id="bsA" type="number" min="0.1" step="0.1" value="70" />
+            </div>
+            <div class="field">
+              <label for="bsB">Размер B / стенка / толщина, мм</label>
+              <input id="bsB" type="number" min="0" step="0.1" value="35" />
+            </div>
+            <div class="field">
+              <label for="bsC">Размер C / внутренний / высота, мм</label>
+              <input id="bsC" type="number" min="0" step="0.1" value="0" />
+            </div>
+
+            <div class="field">
+              <label for="bsAngle">Угол реза, °</label>
+              <input id="bsAngle" type="number" min="0" max="60" step="1" value="0" />
+            </div>
+            <div class="field">
+              <label for="bsBundle">Пакетная резка, шт в пакете</label>
+              <input id="bsBundle" type="number" min="1" step="1" value="1" />
+            </div>
+            <div class="field">
+              <label for="bsHandlingSec">Установка/подача, сек/рез</label>
+              <input id="bsHandlingSec" type="number" min="0" step="0.1" value="5" />
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Результат</h2>
+          <div class="resultStack">
+            <div class="resultCard">
+              <span class="k">Время реза, мин/деталь</span>
+              <span class="v" id="bsMachineOut">—</span>
+              <small id="bsPresetOut">—</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Площадь сечения на рез, см²</span>
+              <span class="v" id="bsAreaOut">—</span>
+              <small>Для труб и профилей считается по площади металла, а не по габаритному контуру.</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Время на партию, мин</span>
+              <span class="v" id="bsBatchOut">—</span>
+              <small id="bsBatchHint">—</small>
+            </div>
+          </div>
+
+          <div class="formula" id="bsFormulaOut"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ГАЛТОВКА -->
+    <section class="tabPane" id="tab-vibro">
+      <div class="grid">
+        <div class="panel">
+          <h2>Галтовка / виброобработка</h2>
+          <div class="subgrid">
+            <div class="field">
+              <label for="vbMachine">Тип оборудования</label>
+              <select id="vbMachine">
+                <option value="tub" selected>Ванна / tub vibrator</option>
+                <option value="flow">Continuous flow</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="vbMaterial">Материал</label>
+              <select id="vbMaterial">
+                <option value="steel" selected>Сталь</option>
+                <option value="stainless">Нержавеющая сталь</option>
+                <option value="aluminum">Алюминий</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="vbTarget">Цель обработки</label>
+              <select id="vbTarget">
+                <option value="deburr" selected>Снятие остроты / лёгкий deburr</option>
+                <option value="radius">Скругление кромок</option>
+                <option value="finish">Выравнивание поверхности</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="vbQty">Деталей в загрузке</label>
+              <input id="vbQty" type="number" min="1" step="1" value="100" />
+            </div>
+            <div class="field">
+              <label for="vbWeight">Масса загрузки деталей, кг</label>
+              <input id="vbWeight" type="number" min="0.1" step="0.1" value="12" />
+            </div>
+            <div class="field">
+              <label for="vbMaxSize">Макс. габарит детали, мм</label>
+              <input id="vbMaxSize" type="number" min="1" step="1" value="120" />
+            </div>
+
+            <div class="field">
+              <label for="vbLoadUnload">Загрузка + выгрузка, мин/партия</label>
+              <input id="vbLoadUnload" type="number" min="0" step="0.1" value="8" />
+            </div>
+            <div class="field">
+              <label for="vbRinseDry">Ополаскивание / сушка, мин/партия</label>
+              <input id="vbRinseDry" type="number" min="0" step="0.1" value="5" />
+            </div>
+            <div class="field">
+              <label for="vbIntensity">Коэф. интенсивности</label>
+              <input id="vbIntensity" type="number" min="0.5" step="0.05" value="1.00" />
+            </div>
+          </div>
+
+          <div class="mutedBox">
+            Это предварительная производственная модель для оценки загрузки. После появления реального
+            оборудования её лучше откалибровать по 10–20 фактическим циклам.
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Результат</h2>
+          <div class="resultStack">
+            <div class="resultCard">
+              <span class="k">Время цикла, мин/загрузка</span>
+              <span class="v" id="vbCycleOut">—</span>
+              <small id="vbPresetOut">—</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Доля времени, мин/деталь</span>
+              <span class="v" id="vbPieceOut">—</span>
+              <small>Для оценки загрузки участка, а не для точной нормы на секунды.</small>
+            </div>
+            <div class="resultCard">
+              <span class="k">Время на партию, мин</span>
+              <span class="v" id="vbBatchOut">—</span>
+              <small id="vbBatchHint">—</small>
+            </div>
+          </div>
+
+          <div class="formula" id="vbFormulaOut"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footerNote">
+      Принцип такой: режущие операции считаются через геометрию, режимы резания и вспомогательное время.
+      Зачистка и галтовка — через калибруемую эмпирику. Это удобнее для реального производства, чем пытаться
+      сделать одну “абсолютно точную” формулу на все случаи.
+    </div>
+  </div>
+
+  <script>
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+    const PRESETS = {
+      drilling: {
+        hss: {
+          steel: {
+            vc: 22,
+            fn: [[3,0.05],[6,0.10],[10,0.16],[14,0.22],[20,0.30],[30,0.40]]
+          },
+          stainless: {
+            vc: 12,
+            fn: [[3,0.04],[6,0.08],[10,0.14],[14,0.18],[20,0.24],[30,0.32]]
+          },
+          aluminum: {
+            vc: 60,
+            fn: [[3,0.07],[6,0.14],[10,0.22],[14,0.28],[20,0.36],[30,0.48]]
+          }
+        },
+        carbide: {
+          steel: {
+            vc: 80,
+            fn: [[3,0.06],[6,0.12],[10,0.20],[14,0.28],[20,0.38],[30,0.52]]
+          },
+          stainless: {
+            vc: 45,
+            fn: [[3,0.05],[6,0.10],[10,0.18],[14,0.24],[20,0.32],[30,0.44]]
+          },
+          aluminum: {
+            vc: 180,
+            fn: [[3,0.08],[6,0.16],[10,0.26],[14,0.34],[20,0.44],[30,0.60]]
+          }
+        }
+      },
+
+      tapping: {
+        cut: {
+          hsse: {
+            steel: 8,
+            stainless: 5,
+            aluminum: 18
+          },
+          carbide: {
+            steel: 18,
+            stainless: 12,
+            aluminum: 40
+          }
+        },
+        form: {
+          hsse: {
+            steel: 14,
+            stainless: 8,
+            aluminum: 24
+          },
+          carbide: {
+            steel: 22,
+            stainless: 14,
+            aluminum: 50
+          }
+        }
+      },
+
+      countersink: {
+        steel: {
+          vc: 41.15,
+          fn: [[6.3,0.114],[8,0.127],[10,0.140],[12.5,0.152],[16,0.165],[20,0.178],[25,0.216],[31.5,0.241],[41,0.279]]
+        },
+        stainless: {
+          vc: 15.24,
+          fn: [[6.3,0.038],[8,0.051],[10,0.064],[12.5,0.064],[16,0.076],[20,0.076],[25,0.089],[31.5,0.114],[41,0.140]]
+        },
+        aluminum: {
+          vc: 114.30,
+          fn: [[6.3,0.152],[8,0.165],[10,0.165],[12.5,0.191],[16,0.216],[20,0.229],[25,0.254],[31.5,0.305],[41,0.343]]
+        }
+      },
+
+      countersinkEmpirical: [
+        { material: 'aluminum', angle: 90,  pilot: 3.4, final: 5.4, holes: 2,  qty: 720,   batchMin: 460 },
+        { material: 'aluminum', angle: 90,  pilot: 3.4, final: 5.4, holes: 2,  qty: 720,   batchMin: 455 },
+        { material: 'aluminum', angle: 90,  pilot: 3.4, final: 5.4, holes: 2,  qty: 404,   batchMin: 270 },
+        { material: 'aluminum', angle: 90,  pilot: 3.4, final: 5.4, holes: 2,  qty: 404,   batchMin: 240 },
+
+        { material: 'aluminum', angle: 90,  pilot: 3.4, final: 6.3, holes: 12, qty: 330,   batchMin: 1515 },
+        { material: 'aluminum', angle: 90,  pilot: 3.4, final: 6.3, holes: 14, qty: 10700, batchMin: 5835 },
+
+        { material: 'aluminum', angle: 90,  pilot: 3.2, final: 6.0, holes: 16, qty: 380,   batchMin: 540 },
+        { material: 'aluminum', angle: 90,  pilot: 3.2, final: 6.0, holes: 16, qty: 380,   batchMin: 825 },
+
+        { material: 'aluminum', angle: 90,  pilot: 3.2, final: 6.3, holes: 2,  qty: 800,   batchMin: 570 },
+        { material: 'aluminum', angle: 90,  pilot: 3.2, final: 6.3, holes: 2,  qty: 800,   batchMin: 645 },
+
+        { material: 'aluminum', angle: 120, pilot: 3.5, final: 6.5, holes: 14, qty: 180,   batchMin: 660 },
+
+        { material: 'stainless', angle: 90, pilot: 3.4, final: 6.3, holes: 4,  qty: 15045, batchMin: 11640 }
+      ],
+
+      bandsaw: {
+        steel: 36.5,
+        stainless: 22.0,
+        aluminum: 72.0
+      },
+
+      deburr: {
+        orbital: {
+          steel: { light: 3.8, medium: 2.5, heavy: 1.6 },
+          stainless: { light: 3.0, medium: 2.0, heavy: 1.3 },
+          aluminum: { light: 4.8, medium: 3.4, heavy: 2.2 }
+        },
+        surface: {
+          steel: { light: 2.4, medium: 1.8, heavy: 1.2 },
+          stainless: { light: 2.0, medium: 1.5, heavy: 1.0 },
+          aluminum: { light: 2.8, medium: 2.1, heavy: 1.5 }
+        }
+      },
+
+      vibro: {
+        tub: {
+          steel: { deburr: 35, radius: 55, finish: 45 },
+          stainless: { deburr: 45, radius: 70, finish: 60 },
+          aluminum: { deburr: 25, radius: 40, finish: 32 }
+        },
+        flow: {
+          steel: { deburr: 18, radius: 26, finish: 22 },
+          stainless: { deburr: 24, radius: 30, finish: 28 },
+          aluminum: { deburr: 12, radius: 18, finish: 15 }
+        }
+      }
+    };
+
+    function n(id){
+      const el = document.getElementById(id);
+      if(!el) return 0;
+      const val = parseFloat(String(el.value).replace(',', '.'));
+      return Number.isFinite(val) ? val : 0;
+    }
+
+    function v(id){
+      const el = document.getElementById(id);
+      return el ? el.value : '';
+    }
+
+    function round(x, d = 2){
+      if(!Number.isFinite(x)) return 0;
+      const p = 10 ** d;
+      return Math.round(x * p) / p;
+    }
+
+    function minPerSec(sec){ return sec / 60; }
+    function rad(deg){ return deg * Math.PI / 180; }
+
+    function interpByDia(arr, dia){
+      if(!arr?.length) return 0;
+      const pts = [...arr].sort((a,b)=>a[0]-b[0]);
+
+      if(dia <= pts[0][0]) return pts[0][1];
+      if(dia >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+
+      for(let i = 0; i < pts.length - 1; i++){
+        const [x1, y1] = pts[i];
+        const [x2, y2] = pts[i + 1];
+        if(dia >= x1 && dia <= x2){
+          const t = (dia - x1) / (x2 - x1);
+          return y1 + (y2 - y1) * t;
+        }
+      }
+      return pts[pts.length - 1][1];
+    }
+
+    function median(arr){
+      const clean = (arr || []).filter(x => Number.isFinite(x)).sort((a,b) => a - b);
+      if(!clean.length) return 0;
+      const mid = Math.floor(clean.length / 2);
+      return clean.length % 2 ? clean[mid] : (clean[mid - 1] + clean[mid]) / 2;
+    }
+
+    function rpmFromVc(vc, d){
+      if(d <= 0) return 0;
+      return (1000 * vc) / (Math.PI * d);
+    }
+
+    function feedFromFn(rpm, fn){
+      return rpm * fn;
+    }
+
+    function getModeFactor(){
+      return v('calcMode') === 'shop' ? Math.max(1, n('shopFactor')) : 1;
+    }
+
+    function commonTotals(machineMinPerPiece){
+      const qty = Math.max(1, n('batchQty'));
+      const setup = Math.max(0, n('setupPerBatch'));
+      const aux = Math.max(0, n('auxPerPiece'));
+      const machineAdj = machineMinPerPiece * getModeFactor();
+      const setupShare = setup / qty;
+      const pieceTotal = machineAdj + aux + setupShare;
+      const batchTotal = pieceTotal * qty;
+      return {
+        qty,
+        aux,
+        setup,
+        setupShare,
+        machineAdj,
+        pieceTotal,
+        batchTotal
+      };
+    }
+
+    function coneAllowance(d, pointAngle){
+      if(d <= 0 || pointAngle <= 0 || pointAngle >= 180) return 0;
+      return (d / 2) / Math.tan(rad(pointAngle / 2));
+    }
+
+    function formatMin(x){
+      return `${round(x, 3)} мин`;
+    }
+
+    function formatMm(x){
+      return `${round(x, 3)} мм`;
+    }
+
+    function formatRpm(x){
+      return `${round(x, 0)} об/мин`;
+    }
+
+    function formatFeed(x){
+      return `${round(x, 1)} мм/мин`;
+    }
+
+    function setText(id, text){
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    }
+
+    function tapDrillSize(major, pitch, type, percent){
+      if(type === 'cut'){
+        return major - (percent * pitch / 76.98);
+      }
+      return major - (percent * pitch / 147.06);
+    }
+
+    function chooseDrillPreset(){
+      const material = v('drillMaterial');
+      const tool = v('drillTool');
+      const dia = n('drillDia');
+      const coolant = v('drillCoolant');
+
+      const preset = PRESETS.drilling[tool][material];
+      let vc = preset.vc;
+      let fn = interpByDia(preset.fn, dia);
+
+      if(material === 'stainless' && coolant === 'no'){
+        vc *= 0.85;
+        fn *= 0.92;
+      }
+      if(material === 'aluminum' && coolant === 'no'){
+        vc *= 0.95;
+      }
+
+      return { vc, fn };
+    }
+
+    function calcDrill(){
+      const dia = Math.max(0.1, n('drillDia'));
+      const depth = Math.max(0.1, n('drillDepth'));
+      const holes = Math.max(1, n('drillHoles'));
+      const pointAngle = Math.max(60, n('drillPointAngle'));
+      const holeType = v('drillHoleType');
+      const peckMode = v('drillPeck');
+      const peckStep = Math.max(0.1, n('drillPeckStep'));
+      const holeOverhead = minPerSec(Math.max(0, n('drillHoleOverheadSec')));
+      const blindFactor = Math.max(0, n('drillBreakthroughFactor'));
+
+      const { vc, fn } = chooseDrillPreset();
+      const rpm = rpmFromVc(vc, dia);
+      const feed = feedFromFn(rpm, fn);
+
+      const addTravel = holeType === 'through'
+        ? coneAllowance(dia, pointAngle)
+        : dia * blindFactor;
+
+      const travel = depth + addTravel;
+
+      let peckEnabled = false;
+      if(peckMode === 'yes') peckEnabled = true;
+      if(peckMode === 'auto' && travel > dia * 3) peckEnabled = true;
+
+      let peckPenalty = 1;
+      if(peckEnabled){
+        const effectiveCycles = Math.max(0, (travel / peckStep) - 1);
+        peckPenalty += effectiveCycles * 0.12;
+      }
+
+      const oneHole = (travel / Math.max(feed, 0.0001)) * peckPenalty + holeOverhead;
+      const machine = oneHole * holes;
+      const totals = commonTotals(machine);
+
+      setText('drillMachineOut', formatMin(totals.machineAdj));
+      setText('drillPieceOut', formatMin(totals.pieceTotal));
+      setText('drillBatchOut', formatMin(totals.batchTotal));
+
+      setText(
+        'drillPresetOut',
+        `Рекомендовано: vc ${round(vc,1)} м/мин • fn ${round(fn,3)} мм/об • n ${round(rpm,0)} об/мин • Vf ${round(feed,1)} мм/мин`
+      );
+
+      setText(
+        'drillBatchHint',
+        `Партия ${totals.qty} шт • ПЗВ ${round(totals.setup,2)} мин • доля ПЗВ ${round(totals.setupShare,3)} мин/деталь`
+      );
+
+      setText(
+        'drillFormulaOut',
+`vc = ${round(vc,1)} м/мин
+fn = ${round(fn,3)} мм/об
+n = (1000 × vc) / (π × D) = ${round(rpm,0)} об/мин
+Vf = n × fn = ${round(feed,1)} мм/мин
+
+Ход на 1 отверстие:
+depth = ${round(depth,3)} мм
+добавка = ${round(addTravel,3)} мм
+итого ход = ${round(travel,3)} мм
+
+Peck penalty = ${round(peckPenalty,3)}
+Время 1 отверстия = ход / Vf + вспом. = ${round(oneHole,4)} мин
+Отверстий на деталь = ${holes}
+
+Машинное время = ${round(machine,4)} мин/деталь
+С учётом режима "${v('calcMode') === 'shop' ? 'Б' : 'А'}" = ${round(totals.machineAdj,4)} мин/деталь
+Полное время = машинное + общее вспом. + доля ПЗВ = ${round(totals.pieceTotal,4)} мин/деталь`
+      );
+    }
+
+    function chooseTapPreset(){
+      const material = v('tapMaterial');
+      const tool = v('tapTool');
+      const type = v('tapType');
+      return PRESETS.tapping[type][tool][material];
+    }
+
+    function calcTap(){
+      const major = Math.max(1, n('tapMajor'));
+      const pitch = Math.max(0.1, n('tapPitch'));
+      const length = Math.max(0.1, n('tapLength'));
+      const threadsPerPiece = Math.max(1, n('tapThreadsPerPiece'));
+      const percent = Math.max(50, n('tapThreadPercent'));
+      const reverseFactor = Math.max(1, n('tapReverseFactor'));
+      const overhead = minPerSec(Math.max(0, n('tapHoleOverheadSec')));
+      const approachPitch = Math.max(0, n('tapApproachPitch'));
+      const holeType = v('tapHoleType');
+      const tapType = v('tapType');
+
+      const vc = chooseTapPreset();
+      const rpm = rpmFromVc(vc, major);
+      const feed = rpm * pitch;
+      const extra = approachPitch * pitch + (holeType === 'through' ? pitch : 0.5 * pitch);
+      const travel = length + extra;
+
+      const oneThread = ((travel / Math.max(feed, 0.0001)) * reverseFactor) + overhead;
+      const machine = oneThread * threadsPerPiece;
+      const totals = commonTotals(machine);
+      const drill = tapDrillSize(major, pitch, tapType, percent);
+
+      setText('tapMachineOut', formatMin(totals.machineAdj));
+      setText('tapPieceOut', formatMin(totals.pieceTotal));
+      setText('tapDrillOut', formatMm(drill));
+
+      setText(
+        'tapPresetOut',
+        `Рекомендовано: vc ${round(vc,1)} м/мин • n ${round(rpm,0)} об/мин • подача ${round(feed,1)} мм/мин`
+      );
+
+      setText(
+        'tapBatchHint',
+        `Партия ${totals.qty} шт • машинное ${round(totals.machineAdj,3)} мин/деталь • партия ${round(totals.batchTotal,2)} мин`
+      );
+
+      setText(
+        'tapFormulaOut',
+`vc = ${round(vc,1)} м/мин
+n = (1000 × vc) / (π × D) = ${round(rpm,0)} об/мин
+Vf = n × pitch = ${round(feed,1)} мм/мин
+
+Длина резьбы = ${round(length,3)} мм
+Подход/выход = ${round(extra,3)} мм
+Итого ход = ${round(travel,3)} мм
+Коэффициент реверса = ${round(reverseFactor,3)}
+
+Время 1 резьбы = ((ход / Vf) × коэф. реверса) + вспом. = ${round(oneThread,4)} мин
+Резьб на деталь = ${threadsPerPiece}
+
+Рекомендуемое сверло = ${round(drill,3)} мм
+Полное время = ${round(totals.pieceTotal,4)} мин/деталь`
+      );
+    }
+
+    function chooseCsPreset(){
+      const material = v('csMaterial');
+      const dia = Math.max(0.1, n('csFinalDia'));
+      const scale = Math.max(0.1, n('csPresetScale'));
+      const preset = PRESETS.countersink[material];
+
+      return {
+        vc: preset.vc * scale,
+        fn: interpByDia(preset.fn, dia) * scale
+      };
+    }
+
+    
+    function countersinkRemovedArea(d0, d1){
+      return Math.max(0, Math.PI * (d1 * d1 - d0 * d0) / 4);
+    }
+
+    function countersinkRemovedVolume(d0, d1, angle){
+      const safeAngle = Math.max(45, Math.min(140, angle));
+      const h = (d1 - d0) / (2 * Math.tan(rad(safeAngle / 2)));
+      return Math.max(0, Math.PI * h * (d1 * d1 + d1 * d0 - 2 * d0 * d0) / 12);
+    }
+
+    function mad(arr){
+      const med = median(arr);
+      const dev = (arr || []).map(x => Math.abs(x - med));
+      return median(dev);
+    }
+
+    function quantile(arr, q){
+      const clean = (arr || []).filter(x => Number.isFinite(x)).sort((a,b)=>a-b);
+      if(!clean.length) return 0;
+      if(clean.length === 1) return clean[0];
+      const pos = (clean.length - 1) * q;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      if(clean[base + 1] !== undefined){
+        return clean[base] + rest * (clean[base + 1] - clean[base]);
+      }
+      return clean[base];
+    }
+
+    function buildCountersinkSmoothModel(){
+      const rows = (PRESETS.countersinkEmpirical || []).map(row => ({
+        ...row,
+        secPerHole: (row.batchMin * 60) / Math.max(row.qty * row.holes, 1),
+        area: countersinkRemovedArea(row.pilot, row.final),
+        volume: countersinkRemovedVolume(row.pilot, row.final, row.angle)
+      }));
+
+      const alu90 = rows.filter(row => row.material === 'aluminum' && Number(row.angle) === 90);
+      const alu90Secs = alu90.map(row => row.secPerHole);
+      const allSecs = rows.map(row => row.secPerHole);
+
+      return {
+        refVolume: countersinkRemovedVolume(3.4, 6.3, 90),
+        refArea: countersinkRemovedArea(3.4, 6.3),
+        alu90Q10: quantile(alu90Secs, 0.10),
+        alu90Q25: quantile(alu90Secs, 0.25),
+        alu90Median: quantile(alu90Secs, 0.50),
+        overallQ25: quantile(allSecs, 0.25),
+        overallMedian: quantile(allSecs, 0.50),
+        rawCount: rows.length,
+        alu90Count: alu90.length
+      };
+    }
+
+    function getCountersinkMaterialProfile(material){
+      const profiles = {
+        aluminum: { baseSec: 3.20, gainSec: 2.00 },
+        steel: { baseSec: 3.80, gainSec: 2.20 },
+        stainless: { baseSec: 4.40, gainSec: 2.50 }
+      };
+      return profiles[material] || profiles.aluminum;
+    }
+
+    function getCountersinkAngleFactor(angle){
+      const safe = Math.max(60, Math.min(140, angle));
+      const raw = Math.pow(90 / safe, 0.25);
+      return Math.min(1.08, Math.max(0.88, raw));
+    }
+
+    function getCsEmpiricalEstimate(material, angle, d0, d1){
+      const model = buildCountersinkSmoothModel();
+      const area = countersinkRemovedArea(d0, d1);
+      const volume = countersinkRemovedVolume(d0, d1, angle);
+      const volumeRatio = Math.pow(Math.max(volume, 0.001) / Math.max(model.refVolume, 0.001), 0.55);
+      const profile = getCountersinkMaterialProfile(material);
+      const angleFactor = getCountersinkAngleFactor(angle);
+
+      const secPerHoleRaw = (profile.baseSec + profile.gainSec * volumeRatio) * angleFactor;
+      const secPerHole = Math.max(3.5, secPerHoleRaw);
+
+      return {
+        secPerHole,
+        rawCount: model.rawCount,
+        alu90Count: model.alu90Count,
+        alu90Q10: model.alu90Q10,
+        alu90Q25: model.alu90Q25,
+        alu90Median: model.alu90Median,
+        overallQ25: model.overallQ25,
+        overallMedian: model.overallMedian,
+        area,
+        volume,
+        refVolume: model.refVolume,
+        volumeRatio,
+        angleFactor,
+        baseSec: profile.baseSec,
+        gainSec: profile.gainSec
+      };
+    }
+
+    function calcCsink(){
+      const material = v('csMaterial');
+      const mode = v('calcMode');
+      const d0 = Math.max(0.1, n('csPilotDia'));
+      const d1 = Math.max(d0 + 0.1, n('csFinalDia'));
+      const angle = Math.max(30, n('csAngle'));
+      const holes = Math.max(1, n('csHoles'));
+      const extraTravel = Math.max(0, n('csExtraTravel'));
+      const overhead = minPerSec(Math.max(0, n('csHoleOverheadSec')));
+      const avgD = (d0 + d1) / 2;
+
+      const { vc, fn } = chooseCsPreset();
+      const rpm = rpmFromVc(vc, avgD);
+      const feed = feedFromFn(rpm, fn);
+
+      const axialDepth = (d1 - d0) / (2 * Math.tan(rad(angle / 2)));
+      const travel = axialDepth + extraTravel;
+
+      const theoryOne = (travel / Math.max(feed, 0.0001)) + overhead;
+      const theoryMachine = theoryOne * holes;
+
+      const empirical = getCsEmpiricalEstimate(material, angle, d0, d1);
+
+      let machineAdj = 0;
+      let pieceTotal = 0;
+      let batchTotal = 0;
+      let presetText = '';
+      let batchHint = '';
+      let formulaTail = '';
+
+      if(mode === 'shop' && empirical){
+        const empiricalOne = empirical.secPerHole / 60;
+        const machineRaw = empiricalOne * holes;
+        const totals = commonTotals(machineRaw);
+        machineAdj = totals.machineAdj;
+        pieceTotal = totals.pieceTotal;
+        batchTotal = totals.batchTotal;
+
+        presetText =
+          `Плавная цеховая модель: ${round(empirical.secPerHole,1)} сек/зенковку • ` +
+          `объём ${round(empirical.volume,2)} мм³ • плавный рост по геометрии и материалу • ` +
+          `теория: vc ${round(vc,1)} м/мин • fn ${round(fn,3)} мм/об`;
+
+        batchHint =
+          `Партия ${totals.qty} шт • машинное ${round(totals.machineAdj,3)} мин/деталь • ` +
+          `ориентир по фактам Al90: Q25 ${round(empirical.alu90Q25,1)} сек/зенковку, median ${round(empirical.alu90Median,1)} сек/зенковку`;
+
+        formulaTail =
+`Теоретическое время 1 зенковки = ${round(theoryOne,4)} мин
+Плавная цеховая модель:
+sec/hole = (base + gain × (V / Vref)^0.55) × angleFactor
+
+base = ${round(empirical.baseSec,3)} сек
+gain = ${round(empirical.gainSec,3)} сек
+V = ${round(empirical.volume,3)} мм³
+Vref = ${round(empirical.refVolume,3)} мм³
+(V / Vref)^0.55 = ${round(empirical.volumeRatio,4)}
+angleFactor = ${round(empirical.angleFactor,4)}
+
+Цеховая оценка = ${round(empirical.secPerHole,3)} сек/зенковку = ${round(empiricalOne,4)} мин
+
+Фактические серии используются как диапазон-контроль, а не как жёсткие точки:
+Al 90° Q25 = ${round(empirical.alu90Q25,3)} сек/зенковку
+Al 90° median = ${round(empirical.alu90Median,3)} сек/зенковку
+
+Полное время на деталь = ${round(pieceTotal,4)} мин
+Полное время на партию = ${round(batchTotal,4)} мин`;
+      } else {
+        const totals = commonTotals(theoryMachine);
+        machineAdj = totals.machineAdj;
+        pieceTotal = totals.pieceTotal;
+        batchTotal = totals.batchTotal;
+
+        presetText =
+          `Рекомендовано: vc ${round(vc,1)} м/мин • fn ${round(fn,3)} мм/об • n ${round(rpm,0)} об/мин • ` +
+          `Vf ${round(feed,1)} мм/мин` +
+          (empirical ? ` • цеховой ориентир ${round(empirical.secPerHole,1)} сек/зенковку` : '');
+
+        batchHint =
+          `Партия ${totals.qty} шт • машинное ${round(totals.machineAdj,3)} мин/деталь • партия ${round(totals.batchTotal,2)} мин`;
+
+        formulaTail =
+`Теоретическое время 1 зенковки = ${round(theoryOne,4)} мин
+Зенковок на деталь = ${holes}
+Полное время = ${round(pieceTotal,4)} мин/деталь`;
+      }
+
+      setText('csMachineOut', formatMin(machineAdj));
+      setText('csDepthOut', formatMm(axialDepth));
+      setText('csPieceOut', formatMin(pieceTotal));
+      setText('csPresetOut', presetText);
+      setText('csBatchHint', batchHint);
+
+      setText(
+        'csFormulaOut',
+`Исходное отверстие = ${round(d0,3)} мм
+Финишный диаметр = ${round(d1,3)} мм
+Угол = ${round(angle,1)}°
+Средний диаметр резания = ${round(avgD,3)} мм
+
+Осевой ход зенковки:
+h = (D1 - D0) / (2 × tan(angle/2)) = ${round(axialDepth,4)} мм
+Доп. ход = ${round(extraTravel,3)} мм
+Итого ход = ${round(travel,3)} мм
+
+vc = ${round(vc,1)} м/мин
+fn = ${round(fn,3)} мм/об
+n = ${round(rpm,0)} об/мин
+Vf = ${round(feed,1)} мм/мин
+
+${formulaTail}`
+      );
+    }
+
+
+    function calcDeburr(){
+      const method = v('debMethod');
+      const material = v('debMaterial');
+      const thickness = Math.max(0.1, n('debThickness'));
+      const edgeLen = Math.max(0.01, n('debEdgeLen'));
+      const areaDm2 = Math.max(0.01, n('debAreaDm2'));
+      const severity = v('debSeverity');
+      const faces = Math.max(1, n('debFaces'));
+      const access = v('debAccess');
+      const handling = minPerSec(Math.max(0, n('debHandlingSec')));
+
+      const baseRate = PRESETS.deburr[method][material][severity];
+
+      const accessFactorMap = {
+        easy: 1.00,
+        medium: 1.18,
+        hard: 1.38
+      };
+      const accessFactor = accessFactorMap[access] ?? 1;
+
+      const thicknessFactor = 1 + 0.028 * Math.pow(Math.max(0, thickness - 1), 0.88);
+
+      let edgeTime = 0;
+      let areaTime = 0;
+      let areaRate = 0;
+
+      if(method === 'orbital'){
+        areaRate = baseRate * 2.8; // дм²/мин, приближённо для эксцентрика
+        edgeTime = (edgeLen * faces) / Math.max(baseRate, 0.0001);
+        areaTime = (areaDm2 * faces) / Math.max(areaRate, 0.0001);
+      } else {
+        areaRate = baseRate * 4.5; // дм²/мин, приближённо для плоскошлифовального
+        edgeTime = (edgeLen * faces) / Math.max(baseRate * 1.25, 0.0001);
+        areaTime = (areaDm2 * faces) / Math.max(areaRate, 0.0001);
+      }
+
+      const machineRaw = (edgeTime + areaTime) * accessFactor * thicknessFactor + handling;
+      const totals = commonTotals(machineRaw);
+
+      setText('debMachineOut', formatMin(totals.machineAdj));
+      setText('debPieceOut', formatMin(totals.pieceTotal));
+      setText('debBatchOut', formatMin(totals.batchTotal));
+
+      setText(
+        'debPresetOut',
+        `База: ${round(baseRate,2)} усл. ед/мин • area rate ${round(areaRate,2)} дм²/мин • access ×${round(accessFactor,2)} • thickness ×${round(thicknessFactor,2)}`
+      );
+
+      setText(
+        'debBatchHint',
+        `Партия ${totals.qty} шт • ПЗВ ${round(totals.setup,2)} мин • машинно-ручная часть ${round(totals.machineAdj,3)} мин/деталь`
+      );
+
+      setText(
+        'debFormulaOut',
+`Метод = ${method === 'orbital' ? 'эксцентрик' : 'плоскошлифовальный'}
+Материал = ${material}
+Тяжесть заусенца = ${severity}
+Длина кромки = ${round(edgeLen,3)} м/деталь
+Площадь = ${round(areaDm2,3)} дм²/деталь
+Сторон = ${faces}
+Толщина = ${round(thickness,3)} мм
+
+Base rate = ${round(baseRate,3)}
+Area rate = ${round(areaRate,3)} дм²/мин
+Access factor = ${round(accessFactor,3)}
+Thickness factor = ${round(thicknessFactor,3)}
+
+Edge time = ${round(edgeTime,4)} мин
+Area time = ${round(areaTime,4)} мин
+Handling = ${round(handling,4)} мин
+
+Машинно-ручное время = ((edge + area) × access × thickness) + handling
+= ${round(machineRaw,4)} мин/деталь
+С учётом режима "${v('calcMode') === 'shop' ? 'Б' : 'А'}" = ${round(totals.machineAdj,4)} мин/деталь
+Полное время = ${round(totals.pieceTotal,4)} мин/деталь`
+      );
+    }
+
+    function calcBandsawAreaMm2(shape, A, B, C){
+      switch(shape){
+        case 'plate':
+        case 'rectBar':
+          return A * B;
+
+        case 'squareBar':
+          return A * A;
+
+        case 'round':
+          return Math.PI * A * A / 4;
+
+        case 'roundTube': {
+          const doOuter = A;
+          const diInner = C > 0 ? Math.max(0, C) : Math.max(0, A - 2 * B);
+          const inner = Math.min(diInner, doOuter);
+          return Math.max(0, Math.PI * (doOuter * doOuter - inner * inner) / 4);
+        }
+
+        case 'rectTube': {
+          const width = A;
+          const wall = B;
+          const height = C > 0 ? C : A;
+          const innerW = Math.max(0, width - 2 * wall);
+          const innerH = Math.max(0, height - 2 * wall);
+          return Math.max(0, width * height - innerW * innerH);
+        }
+
+        default:
+          return 0;
+      }
+    }
+
+    function calcBandsaw(){
+      const material = v('bsMaterial');
+      const shape = v('bsShape');
+      const cuts = Math.max(1, n('bsCuts'));
+      const A = Math.max(0.1, n('bsA'));
+      const B = Math.max(0, n('bsB'));
+      const C = Math.max(0, n('bsC'));
+      const angle = Math.max(0, Math.min(60, n('bsAngle')));
+      const bundle = Math.max(1, n('bsBundle'));
+      const handling = minPerSec(Math.max(0, n('bsHandlingSec')));
+
+      const areaMm2 = calcBandsawAreaMm2(shape, A, B, C);
+      const areaCm2 = areaMm2 / 100;
+      const cutRate = PRESETS.bandsaw[material];
+
+      const angleFactor = 1 / Math.max(Math.cos(rad(angle)), 0.2);
+
+      let bundleFactor = 1;
+      if(bundle > 1){
+        bundleFactor = 1 + 0.10 * Math.pow(bundle - 1, 0.92);
+      }
+
+      const timePerCutRaw = ((areaCm2 * angleFactor * bundleFactor) / Math.max(cutRate, 0.0001)) + handling;
+      const machineBatchRaw = timePerCutRaw * cuts;
+
+      const producedDetails = cuts * bundle;
+      const setup = Math.max(0, n('setupPerBatch'));
+      const aux = Math.max(0, n('auxPerPiece'));
+      const modeFactor = getModeFactor();
+
+      const machineBatchAdj = machineBatchRaw * modeFactor;
+      const pieceMachine = machineBatchAdj / Math.max(producedDetails, 1);
+      const pieceTotal = pieceMachine + aux + (setup / Math.max(producedDetails, 1));
+      const batchTotal = machineBatchAdj + aux * producedDetails + setup;
+
+      let shapeLabel = '';
+      if(shape === 'plate') shapeLabel = 'Плита/лист: A × B';
+      if(shape === 'rectBar') shapeLabel = 'Полоса/прямоугольник: A × B';
+      if(shape === 'squareBar') shapeLabel = 'Квадрат: A × A';
+      if(shape === 'round') shapeLabel = 'Круг: πD²/4';
+      if(shape === 'roundTube') shapeLabel = 'Круглая труба: π(Dнар² - Dвн²)/4';
+      if(shape === 'rectTube') shapeLabel = 'Профильная труба: WH - (W-2t)(H-2t)';
+
+      setText('bsMachineOut', formatMin(pieceTotal));
+      setText('bsAreaOut', `${round(areaCm2,3)} см²`);
+      setText('bsBatchOut', formatMin(batchTotal));
+
+      setText(
+        'bsPresetOut',
+        `Производительность реза: ${round(cutRate,1)} см²/мин • angle ×${round(angleFactor,3)} • bundle ×${round(bundleFactor,3)} • произведено ${producedDetails} шт`
+      );
+
+      setText(
+        'bsBatchHint',
+        `Резов ${cuts} • в пакете ${bundle} шт • машинная часть ${round(pieceMachine,3)} мин/деталь`
+      );
+
+      setText(
+        'bsFormulaOut',
+`Тип = ${shapeLabel}
+A = ${round(A,3)} мм
+B = ${round(B,3)} мм
+C = ${round(C,3)} мм
+
+Площадь металла на рез:
+S = ${round(areaMm2,3)} мм² = ${round(areaCm2,3)} см²
+
+Производительность реза = ${round(cutRate,3)} см²/мин
+Угол реза = ${round(angle,1)}° → factor = ${round(angleFactor,3)}
+Пакет = ${bundle} шт → factor = ${round(bundleFactor,3)}
+
+Время 1 реза = (S × angleFactor × bundleFactor / cutRate) + handling
+= ${round(timePerCutRaw,4)} мин
+
+Резов = ${cuts}
+Деталей произведено = ${producedDetails}
+
+Машинное время на всю серию = ${round(machineBatchRaw,4)} мин
+С учётом режима "${v('calcMode') === 'shop' ? 'Б' : 'А'}" = ${round(machineBatchAdj,4)} мин
+Полное время на 1 деталь = ${round(pieceTotal,4)} мин
+Полное время на серию = ${round(batchTotal,4)} мин`
+      );
+    }
+
+    function calcVibro(){
+      const machine = v('vbMachine');
+      const material = v('vbMaterial');
+      const target = v('vbTarget');
+      const loadQty = Math.max(1, n('vbQty'));
+      const loadWeight = Math.max(0.1, n('vbWeight'));
+      const maxSize = Math.max(1, n('vbMaxSize'));
+      const loadUnload = Math.max(0, n('vbLoadUnload'));
+      const rinseDry = Math.max(0, n('vbRinseDry'));
+      const intensity = Math.max(0.5, n('vbIntensity'));
+      const globalQty = Math.max(1, n('batchQty'));
+      const aux = Math.max(0, n('auxPerPiece'));
+      const setup = Math.max(0, n('setupPerBatch'));
+
+      const baseCycle = PRESETS.vibro[machine][material][target];
+
+      const sizeFactor = 1 + 0.00095 * Math.pow(Math.max(0, maxSize - 80), 0.95);
+      const weightFactor = 1 + 0.010 * Math.pow(Math.max(0, loadWeight - 8), 0.72);
+
+      const processCycle = baseCycle * sizeFactor * weightFactor / intensity;
+      const totalPerLoad = processCycle + loadUnload + rinseDry;
+
+      const loadsNeeded = Math.ceil(globalQty / loadQty);
+      const batchTotal = loadsNeeded * totalPerLoad + setup + aux * globalQty;
+      const pieceShare = batchTotal / globalQty;
+
+      setText('vbCycleOut', formatMin(totalPerLoad));
+      setText('vbPieceOut', formatMin(pieceShare));
+      setText('vbBatchOut', formatMin(batchTotal));
+
+      setText(
+        'vbPresetOut',
+        `Базовый цикл ${round(baseCycle,1)} мин • size ×${round(sizeFactor,2)} • weight ×${round(weightFactor,2)} • intensity ÷${round(intensity,2)}`
+      );
+
+      setText(
+        'vbBatchHint',
+        `На загрузку ${loadQty} шт • для партии ${globalQty} шт потребуется ${loadsNeeded} загрузк(и)`
+      );
+
+      setText(
+        'vbFormulaOut',
+`Тип машины = ${machine}
+Цель = ${target}
+Базовый цикл = ${round(baseCycle,3)} мин
+
+Размерный фактор = ${round(sizeFactor,3)}
+Весовой фактор = ${round(weightFactor,3)}
+Коэф. интенсивности = ${round(intensity,3)}
+
+Process cycle = base × size × weight / intensity
+= ${round(processCycle,4)} мин
+
+Загрузка+выгрузка = ${round(loadUnload,3)} мин
+Ополаскивание/сушка = ${round(rinseDry,3)} мин
+Итого на 1 загрузку = ${round(totalPerLoad,4)} мин
+
+В загрузке = ${loadQty} шт
+Партия = ${globalQty} шт
+Количество загрузок = ${loadsNeeded}
+
+Полное время на партию = ${round(batchTotal,4)} мин
+Доля времени = ${round(pieceShare,4)} мин/деталь`
+      );
+    }
+
+    function recalcAll(){
+      calcDrill();
+      calcTap();
+      calcCsink();
+      calcDeburr();
+      calcBandsaw();
+      calcVibro();
+    }
+
+    function initTabs(){
+      $$('.tabBtn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          $$('.tabBtn').forEach(x=>x.classList.remove('active'));
+          $$('.tabPane').forEach(x=>x.classList.remove('active'));
+
+          btn.classList.add('active');
+          const tab = btn.dataset.tab;
+          const pane = document.getElementById(`tab-${tab}`);
+          if(pane) pane.classList.add('active');
+        });
+      });
+    }
+
+    function initReactiveInputs(){
+      $$('input, select, textarea').forEach(el=>{
+        el.addEventListener('input', recalcAll);
+        el.addEventListener('change', recalcAll);
+      });
+    }
+
+    initTabs();
+    initReactiveInputs();
+    recalcAll();
+  </script>
+</body>
+</html>
